@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -6,32 +7,126 @@ import Footer from "@/components/Footer";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Trophy, Target, Award, Flag, Clock, BarChart3, LogOut } from "lucide-react";
 import StatCard from "@/components/StatCard";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data for the chart
-const progressData = [
-  { day: 'Day 1', points: 100 },
-  { day: 'Day 2', points: 250 },
-  { day: 'Day 3', points: 320 },
-  { day: 'Day 4', points: 450 },
-  { day: 'Day 5', points: 580 },
-  { day: 'Day 6', points: 780 },
-  { day: 'Day 7', points: 1250 },
-];
-
-// Mock recent activity data
-const recentActivities = [
-  { id: 1, challenge: 'Binary Search', points: 100, time: '2 hours ago', solved: true },
-  { id: 2, challenge: 'SQL Injection Basics', points: 300, time: '6 hours ago', solved: true },
-  { id: 3, challenge: 'XSS Adventure', points: 250, time: '1 day ago', solved: true },
-  { id: 4, challenge: 'Cryptographic Puzzle', points: 400, time: '2 days ago', solved: false },
-];
+interface Activity {
+  id: string;
+  challenge: string;
+  points: number;
+  time: string;
+  solved: boolean;
+}
 
 const Dashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [progressData, setProgressData] = useState<{ day: string; points: number }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+
+      try {
+        // Fetch user's recent activities
+        const { data: activitiesData, error: activitiesError } = await supabase
+          .from("activities")
+          .select(`
+            id,
+            description,
+            points,
+            created_at,
+            activity_type,
+            challenges(title)
+          `)
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        if (!activitiesError && activitiesData) {
+          const formattedActivities = activitiesData.map(activity => {
+            const challengeTitle = activity.challenges?.title || "Challenge";
+            const timeAgo = formatTimeAgo(new Date(activity.created_at));
+            
+            return {
+              id: activity.id,
+              challenge: challengeTitle,
+              points: activity.points,
+              time: timeAgo,
+              solved: activity.activity_type === 'solve',
+            };
+          });
+          
+          setActivities(formattedActivities);
+        }
+
+        // Generate progress data (for demo purposes - in a real app, you'd fetch this)
+        generateProgressData();
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
+
+  const formatTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  };
+
+  const generateProgressData = () => {
+    // This is a placeholder - in a real app, you'd fetch actual progress data
+    const data = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const day = `Day ${7-i}`;
+      
+      // Generate some random progress that increases over time
+      // In a real app, this would be actual user progress data
+      const basePoints = user?.points || 0;
+      const dailyProgress = Math.floor((basePoints / 7) * (7-i) + Math.random() * 100);
+      
+      data.push({
+        day,
+        points: dailyProgress > basePoints ? basePoints : dailyProgress
+      });
+    }
+    
+    setProgressData(data);
+  };
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
+
+  // For the case where user data is still loading
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow py-12 flex items-center justify-center">
+          <div className="text-white">Loading dashboard data...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // If there are no activities yet, provide some default ones
+  const recentActivities = activities.length > 0 ? activities : [
+    { id: '1', challenge: 'No activities yet', points: 0, time: 'Join a challenge to get started', solved: false }
+  ];
 
   return (
     <div className="flex flex-col min-h-screen">

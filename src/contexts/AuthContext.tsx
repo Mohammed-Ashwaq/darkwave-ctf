@@ -1,6 +1,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface User {
   id: string;
@@ -9,6 +11,8 @@ interface User {
   points: number;
   solvedChallenges: number;
   rank: string;
+  avatarUrl?: string;
+  bio?: string;
 }
 
 interface AuthContextType {
@@ -17,7 +21,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (username: string, email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,48 +39,92 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+  // Function to fetch user profile data from profiles table
+  const fetchUserProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      username: data.username,
+      email: data.email,
+      points: data.points,
+      solvedChallenges: data.solved_challenges,
+      rank: data.rank,
+      avatarUrl: data.avatar_url,
+      bio: data.bio,
+    };
+  };
+
+  // Function to handle setting up user from Supabase session
+  const handleSupabaseSession = async (session: { user: SupabaseUser } | null) => {
+    if (session?.user) {
+      const userData = await fetchUserProfile(session.user.id);
+      if (userData) {
+        setUser(userData);
+      }
+    } else {
+      setUser(null);
     }
     setIsLoading(false);
+  };
+
+  useEffect(() => {
+    // Check if we have a session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleSupabaseSession(session);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        handleSupabaseSession(session);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      // In a real app, this would make an API call to verify credentials
-      // For demo purposes, we'll use a mock user
-      if (email === "demo@example.com" && password === "password") {
-        const mockUser: User = {
-          id: "1",
-          username: "demouser",
-          email: "demo@example.com",
-          points: 1250,
-          solvedChallenges: 8,
-          rank: "Advanced"
-        };
-        
-        setUser(mockUser);
-        localStorage.setItem("user", JSON.stringify(mockUser));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      const userData = await fetchUserProfile(data.user.id);
+      if (userData) {
+        setUser(userData);
         toast({
           title: "Login successful",
           description: "Welcome back!",
         });
         return true;
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
-        return false;
       }
-    } catch (error) {
+      return false;
+    } catch (error: any) {
       toast({
         title: "Login failed",
-        description: "An error occurred during login",
+        description: error.message || "An error occurred during login",
         variant: "destructive",
       });
       return false;
@@ -85,37 +133,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (username: string, email: string, password: string) => {
     try {
-      // In a real app, this would make an API call to create a user
-      // For demo purposes, we'll create a mock user
-      const mockUser: User = {
-        id: Date.now().toString(),
-        username,
+      const { data, error } = await supabase.auth.signUp({
         email,
-        points: 0,
-        solvedChallenges: 0,
-        rank: "Beginner"
-      };
-      
-      setUser(mockUser);
-      localStorage.setItem("user", JSON.stringify(mockUser));
+        password,
+        options: {
+          data: {
+            username,
+          },
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Registration failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
       toast({
         title: "Registration successful",
-        description: "Your account has been created",
+        description: "Your account has been created. Please check your email for verification.",
       });
+      
+      // If email confirmation is disabled, the user will be immediately authenticated
+      if (data.user) {
+        const userData = await fetchUserProfile(data.user.id);
+        if (userData) {
+          setUser(userData);
+        }
+      }
+      
       return true;
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: "An error occurred during registration",
+        description: error.message || "An error occurred during registration",
         variant: "destructive",
       });
       return false;
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("user");
     toast({
       title: "Logged out",
       description: "You have been logged out successfully",
