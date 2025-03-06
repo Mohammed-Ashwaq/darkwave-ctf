@@ -1,13 +1,21 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, Terminal, Award, Flag, User, BarChart } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, Terminal, Award, Flag, User, BarChart, LogIn } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleNavbar = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
   };
 
   return (
@@ -24,11 +32,34 @@ const Navbar = () => {
             <NavLink to="/challenges" icon={<Flag className="w-4 h-4 mr-1" />} text="Challenges" />
             <NavLink to="/leaderboard" icon={<Award className="w-4 h-4 mr-1" />} text="Leaderboard" />
             <NavLink to="/scoreboard" icon={<BarChart className="w-4 h-4 mr-1" />} text="Scoreboard" />
-            <NavLink to="/profile" icon={<User className="w-4 h-4 mr-1" />} text="Profile" />
             
-            <button className="bg-ctf-orange hover:bg-ctf-orange/90 text-white px-4 py-2 rounded-md transition-colors">
-              Sign In
-            </button>
+            {isAuthenticated ? (
+              <>
+                <NavLink to="/dashboard" icon={<User className="w-4 h-4 mr-1" />} text="Dashboard" />
+                <button 
+                  onClick={handleLogout}
+                  className="bg-ctf-card hover:bg-ctf-card/70 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/login" 
+                  className="text-gray-300 hover:text-white transition-colors flex items-center"
+                >
+                  <LogIn className="w-4 h-4 mr-1" />
+                  Log In
+                </Link>
+                <Link 
+                  to="/register"
+                  className="bg-ctf-orange hover:bg-ctf-orange/90 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Navigation Button */}
@@ -43,11 +74,28 @@ const Navbar = () => {
             <MobileNavLink to="/challenges" text="Challenges" />
             <MobileNavLink to="/leaderboard" text="Leaderboard" />
             <MobileNavLink to="/scoreboard" text="Scoreboard" />
-            <MobileNavLink to="/profile" text="Profile" />
             
-            <button className="bg-ctf-orange hover:bg-ctf-orange/90 text-white py-2 rounded-md transition-colors mt-2">
-              Sign In
-            </button>
+            {isAuthenticated ? (
+              <>
+                <MobileNavLink to="/dashboard" text="Dashboard" />
+                <button 
+                  onClick={handleLogout}
+                  className="bg-ctf-card hover:bg-ctf-card/70 text-white py-2 rounded-md transition-colors mt-2"
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <MobileNavLink to="/login" text="Log In" />
+                <Link 
+                  to="/register"
+                  className="bg-ctf-orange hover:bg-ctf-orange/90 text-white py-2 rounded-md transition-colors mt-2 text-center"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>
