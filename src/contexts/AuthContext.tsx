@@ -133,10 +133,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (username: string, email: string, password: string) => {
     try {
+      // Create auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: window.location.origin,
           data: {
             username,
           },
@@ -150,6 +152,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           variant: "destructive",
         });
         return false;
+      }
+
+      // Create a profile record manually if needed
+      if (data.user) {
+        // Check if profile already exists
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+
+        if (profileError && profileError.code !== "PGRST116") {
+          // If error is not "no rows returned", it's a real error
+          console.error("Error checking profile:", profileError);
+        }
+
+        // If profile doesn't exist, create it manually
+        if (!profileData) {
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: data.user.id,
+                username,
+                email,
+                points: 0,
+                solved_challenges: 0,
+                rank: "Beginner"
+              }
+            ]);
+
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+          }
+        }
       }
 
       toast({

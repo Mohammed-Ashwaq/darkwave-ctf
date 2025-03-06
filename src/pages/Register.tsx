@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -15,9 +15,31 @@ const Register = () => {
   const [error, setError] = useState("");
   const { register, isAuthenticated } = useAuth();
 
+  // Simple email validation regex
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Client-side validation
+    if (!username.trim()) {
+      setError("Username is required");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
@@ -25,11 +47,16 @@ const Register = () => {
     }
 
     setIsSubmitting(true);
-    const success = await register(username, email, password);
-    setIsSubmitting(false);
     
-    if (!success) {
-      setError("Registration failed. Please try again.");
+    try {
+      const success = await register(username, email, password);
+      if (!success) {
+        setError("Registration failed. Please try again.");
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred during registration");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -53,6 +80,7 @@ const Register = () => {
             )}
             
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Username field */}
               <div>
                 <label htmlFor="username" className="block text-gray-300 mb-2">Username</label>
                 <div className="relative">
@@ -71,6 +99,7 @@ const Register = () => {
                 </div>
               </div>
               
+              {/* Email field */}
               <div>
                 <label htmlFor="email" className="block text-gray-300 mb-2">Email Address</label>
                 <div className="relative">
@@ -89,6 +118,7 @@ const Register = () => {
                 </div>
               </div>
               
+              {/* Password field */}
               <div>
                 <label htmlFor="password" className="block text-gray-300 mb-2">Password</label>
                 <div className="relative">
@@ -101,12 +131,14 @@ const Register = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                     className="w-full bg-ctf-card/70 border border-gray-700 pl-10 pr-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-ctf-blue text-white"
                     placeholder="Create a secure password"
                   />
                 </div>
               </div>
               
+              {/* Confirm Password field */}
               <div>
                 <label htmlFor="confirmPassword" className="block text-gray-300 mb-2">Confirm Password</label>
                 <div className="relative">
@@ -125,6 +157,7 @@ const Register = () => {
                 </div>
               </div>
               
+              {/* Submit button */}
               <button
                 type="submit"
                 disabled={isSubmitting}
