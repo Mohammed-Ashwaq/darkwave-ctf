@@ -9,6 +9,7 @@ export interface ChallengeCardProps {
   difficulty: "Easy" | "Medium" | "Hard" | "Expert";
   solves: number;
   solveRate: number;
+  description?: string;
 }
 
 const getDifficultyColor = (difficulty: string): string => {
@@ -33,6 +34,7 @@ const ChallengeCard: React.FC<ChallengeCardProps> = ({
   difficulty,
   solves,
   solveRate,
+  description,
 }) => {
   const difficultyClass = getDifficultyColor(difficulty);
 

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,8 +5,10 @@ import ChallengeCard from "@/components/ChallengeCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import DifficultyFilter from "@/components/DifficultyFilter";
 import { Search } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const allChallenges = [
+  // Existing challenges
   {
     id: "1",
     title: "Binary Search",
@@ -48,6 +49,53 @@ const allChallenges = [
     solves: 22943,
     solveRate: 96,
   },
+  // New General Skills Challenges
+  {
+    id: "16",
+    title: "Bit Flipper",
+    category: "General Skills",
+    difficulty: "Easy",
+    solves: 8742,
+    solveRate: 88,
+    description: "Learn how to manipulate bits and understand binary operations."
+  },
+  {
+    id: "17",
+    title: "Regex Master",
+    category: "General Skills",
+    difficulty: "Medium",
+    solves: 5621,
+    solveRate: 76,
+    description: "Apply your regex skills to extract patterns from a large dataset."
+  },
+  {
+    id: "18",
+    title: "Command Line Ninja",
+    category: "General Skills",
+    difficulty: "Easy",
+    solves: 9832,
+    solveRate: 92,
+    description: "Navigate through a complex directory structure using only command line tools."
+  },
+  {
+    id: "19",
+    title: "Base Converter",
+    category: "General Skills",
+    difficulty: "Medium",
+    solves: 4328,
+    solveRate: 65,
+    description: "Convert between different number bases to reveal the hidden message."
+  },
+  {
+    id: "20",
+    title: "Cipher Decoder",
+    category: "General Skills",
+    difficulty: "Medium",
+    solves: 3765,
+    solveRate: 58,
+    description: "Decode messages encrypted with classical ciphers."
+  },
+  // Existing challenges 
   {
     id: "6",
     title: "Collaborative Development",
@@ -96,6 +144,53 @@ const allChallenges = [
     solves: 12578,
     solveRate: 67,
   },
+  // New Web Exploitation Challenges
+  {
+    id: "21",
+    title: "Cookie Monster",
+    category: "Web Exploitation",
+    difficulty: "Easy",
+    solves: 7832,
+    solveRate: 82,
+    description: "Manipulate browser cookies to gain unauthorized access to a web application."
+  },
+  {
+    id: "22",
+    title: "JWT Weakness",
+    category: "Web Exploitation",
+    difficulty: "Medium",
+    solves: 4521,
+    solveRate: 63,
+    description: "Exploit weaknesses in JWT implementation to forge authentication tokens."
+  },
+  {
+    id: "23",
+    title: "CSRF Attack",
+    category: "Web Exploitation",
+    difficulty: "Medium",
+    solves: 3298,
+    solveRate: 58,
+    description: "Perform a Cross-Site Request Forgery attack to execute unauthorized actions."
+  },
+  {
+    id: "24",
+    title: "API Bypass",
+    category: "Web Exploitation",
+    difficulty: "Hard",
+    solves: 2154,
+    solveRate: 43,
+    description: "Bypass API security controls to access restricted endpoints."
+  },
+  {
+    id: "25",
+    title: "Prototype Pollution",
+    category: "Web Exploitation",
+    difficulty: "Hard",
+    solves: 1876,
+    solveRate: 38,
+    description: "Exploit JavaScript prototype pollution to compromise a web application."
+  },
+  // Remaining existing challenges
   {
     id: "12",
     title: "Memory Corruption",
