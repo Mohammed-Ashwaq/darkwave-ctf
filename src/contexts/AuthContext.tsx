@@ -2,27 +2,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User as SupabaseUser } from "@supabase/supabase-js";
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  points: number;
-  solvedChallenges: number;
-  rank: string;
-  avatarUrl?: string;
-  bio?: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (username: string, email: string, password: string) => Promise<boolean>;
-  logout: () => Promise<void>;
-}
+import { AuthContextType } from "./auth-types";
+import { 
+  User,
+  handleSupabaseSession, 
+  loginUser, 
+  registerUser, 
+  logoutUser 
+} from "@/utils/auth-utils";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -39,54 +26,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Function to fetch user profile data from profiles table
-  const fetchUserProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("Error fetching user profile:", error);
-      return null;
-    }
-
-    return {
-      id: data.id,
-      username: data.username,
-      email: data.email,
-      points: data.points,
-      solvedChallenges: data.solved_challenges,
-      rank: data.rank,
-      avatarUrl: data.avatar_url,
-      bio: data.bio,
-    };
-  };
-
-  // Function to handle setting up user from Supabase session
-  const handleSupabaseSession = async (session: { user: SupabaseUser } | null) => {
-    if (session?.user) {
-      const userData = await fetchUserProfile(session.user.id);
-      if (userData) {
-        setUser(userData);
-      }
-    } else {
-      setUser(null);
-    }
-    setIsLoading(false);
-  };
-
   useEffect(() => {
     // Check if we have a session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      handleSupabaseSession(session);
+      handleSupabaseSession(session, setUser, setIsLoading);
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        handleSupabaseSession(session);
+        handleSupabaseSession(session, setUser, setIsLoading);
       }
     );
 
@@ -97,30 +46,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
+      const result = await loginUser(email, password);
+      
+      if (!result.success) {
         toast({
           title: "Login failed",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
         return false;
       }
 
-      const userData = await fetchUserProfile(data.user.id);
-      if (userData) {
-        setUser(userData);
-        toast({
-          title: "Login successful",
-          description: "Welcome back!",
-        });
-        return true;
-      }
-      return false;
+      setUser(result.user!);
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      return true;
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -133,74 +75,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (username: string, email: string, password: string) => {
     try {
-      // Create auth user
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: {
-            username,
-          },
-        },
-      });
-
-      if (error) {
+      const result = await registerUser(username, email, password);
+      
+      if (!result.success) {
         toast({
           title: "Registration failed",
-          description: error.message,
+          description: result.error,
           variant: "destructive",
         });
         return false;
-      }
-
-      // Create a profile record manually if needed
-      if (data.user) {
-        // Check if profile already exists
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
-
-        if (profileError && profileError.code !== "PGRST116") {
-          // If error is not "no rows returned", it's a real error
-          console.error("Error checking profile:", profileError);
-        }
-
-        // If profile doesn't exist, create it manually
-        if (!profileData) {
-          const { error: insertError } = await supabase
-            .from("profiles")
-            .insert([
-              {
-                id: data.user.id,
-                username,
-                email,
-                points: 0,
-                solved_challenges: 0,
-                rank: "Beginner"
-              }
-            ]);
-
-          if (insertError) {
-            console.error("Error creating profile:", insertError);
-          }
-        }
       }
 
       toast({
         title: "Registration successful",
         description: "Your account has been created. Please check your email for verification.",
       });
-      
-      // If email confirmation is disabled, the user will be immediately authenticated
-      if (data.user) {
-        const userData = await fetchUserProfile(data.user.id);
-        if (userData) {
-          setUser(userData);
-        }
-      }
       
       return true;
     } catch (error: any) {
@@ -214,7 +103,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await logoutUser();
     setUser(null);
     toast({
       title: "Logged out",
