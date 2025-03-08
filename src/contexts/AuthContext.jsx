@@ -1,7 +1,6 @@
-
 import { createContext, useContext, useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "../hooks/use-toast";
+import { supabase } from "../integrations/supabase/client";
 
 const AuthContext = createContext();
 
@@ -13,10 +12,8 @@ export const useAuth = () => {
   return context;
 };
 
-// Utility functions that were moved from auth-utils.ts
 const handleSupabaseSession = (session, setUser, setIsLoading) => {
   if (session) {
-    // We have a session, get user data
     const userData = {
       id: session.user.id,
       email: session.user.email,
@@ -86,7 +83,6 @@ const registerUser = async (username, email, password) => {
       return { success: false, error: error.message };
     }
     
-    // Create or update the profile in the profiles table
     const { error: profileError } = await supabase
       .from('profiles')
       .upsert(
@@ -128,12 +124,10 @@ export const AuthProvider = ({ children }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have a session
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleSupabaseSession(session, setUser, setIsLoading);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         handleSupabaseSession(session, setUser, setIsLoading);
