@@ -1,6 +1,7 @@
+
 import { createContext, useContext, useState, useEffect } from "react";
-import { useToast } from "../hooks/use-toast";
-import { supabase } from "../integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthContext = createContext();
 
@@ -124,10 +125,12 @@ export const AuthProvider = ({ children }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if we have a session
     supabase.auth.getSession().then(({ data: { session } }) => {
       handleSupabaseSession(session, setUser, setIsLoading);
     });
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         handleSupabaseSession(session, setUser, setIsLoading);
