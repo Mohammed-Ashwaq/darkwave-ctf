@@ -2,13 +2,7 @@
 import React from "react";
 import { Check } from "lucide-react";
 
-interface CategoryFilterProps {
-  categories: string[];
-  selectedCategories: string[];
-  onChange: (category: string) => void;
-}
-
-const CategoryFilter: React.FC<CategoryFilterProps> = ({
+const CategoryFilter = ({
   categories,
   selectedCategories,
   onChange,

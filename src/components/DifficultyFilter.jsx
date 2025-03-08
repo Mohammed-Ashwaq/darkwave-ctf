@@ -2,18 +2,12 @@
 import React from "react";
 import { Check } from "lucide-react";
 
-interface DifficultyFilterProps {
-  difficulties: string[];
-  selectedDifficulties: string[];
-  onChange: (difficulty: string) => void;
-}
-
-const DifficultyFilter: React.FC<DifficultyFilterProps> = ({
+const DifficultyFilter = ({
   difficulties,
   selectedDifficulties,
   onChange,
 }) => {
-  const getDifficultyColor = (difficulty: string): string => {
+  const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case "Easy":
         return "bg-green-600";

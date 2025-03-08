@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -16,12 +16,12 @@ const Register = () => {
   const { register, isAuthenticated } = useAuth();
 
   // Simple email validation regex
-  const validateEmail = (email: string) => {
+  const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -53,7 +53,7 @@ const Register = () => {
       if (!success) {
         setError("Registration failed. Please try again.");
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message || "An error occurred during registration");
     } finally {
       setIsSubmitting(false);

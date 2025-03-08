@@ -2,17 +2,7 @@
 import { ThumbsUp, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export interface ChallengeCardProps {
-  id: string;
-  title: string;
-  category: string;
-  difficulty: "Easy" | "Medium" | "Hard" | "Expert";
-  solves: number;
-  solveRate: number;
-  description?: string;
-}
-
-const getDifficultyColor = (difficulty: string): string => {
+const getDifficultyColor = (difficulty) => {
   switch (difficulty) {
     case "Easy":
       return "bg-green-600 text-white";
@@ -27,7 +17,7 @@ const getDifficultyColor = (difficulty: string): string => {
   }
 };
 
-const ChallengeCard: React.FC<ChallengeCardProps> = ({
+const ChallengeCard = ({
   id,
   title,
   category,

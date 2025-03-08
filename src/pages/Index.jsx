@@ -94,7 +94,7 @@ const Index = () => {
                   id={challenge.id}
                   title={challenge.title}
                   category={challenge.category}
-                  difficulty={challenge.difficulty as any}
+                  difficulty={challenge.difficulty}
                   solves={challenge.solves}
                   solveRate={challenge.solveRate}
                 />

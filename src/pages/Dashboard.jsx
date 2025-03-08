@@ -9,18 +9,10 @@ import { Trophy, Target, Award, Flag, Clock, BarChart3, LogOut } from "lucide-re
 import StatCard from "@/components/StatCard";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Activity {
-  id: string;
-  challenge: string;
-  points: number;
-  time: string;
-  solved: boolean;
-}
-
 const Dashboard = () => {
   const { user, logout, isAuthenticated } = useAuth();
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [progressData, setProgressData] = useState<{ day: string; points: number }[]>([]);
+  const [activities, setActivities] = useState([]);
+  const [progressData, setProgressData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -72,7 +64,7 @@ const Dashboard = () => {
     fetchUserData();
   }, [user]);
 
-  const formatTimeAgo = (date: Date) => {
+  const formatTimeAgo = (date) => {
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
     

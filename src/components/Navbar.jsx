@@ -103,7 +103,7 @@ const Navbar = () => {
   );
 };
 
-const NavLink = ({ to, icon, text }: { to: string; icon: React.ReactNode; text: string }) => (
+const NavLink = ({ to, icon, text }) => (
   <Link 
     to={to} 
     className="flex items-center text-gray-300 hover:text-white hover:border-b-2 hover:border-ctf-orange transition-all pb-1"
@@ -113,7 +113,7 @@ const NavLink = ({ to, icon, text }: { to: string; icon: React.ReactNode; text: 
   </Link>
 );
 
-const MobileNavLink = ({ to, text }: { to: string; text: string }) => (
+const MobileNavLink = ({ to, text }) => (
   <Link 
     to={to} 
     className="text-gray-300 hover:text-white hover:bg-ctf-card p-2 rounded-md transition-colors"

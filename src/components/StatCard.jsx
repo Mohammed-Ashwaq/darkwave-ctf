@@ -1,14 +1,7 @@
 
 import React from "react";
 
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  description?: string;
-  icon: React.ReactNode;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ title, value, description, icon }) => {
+const StatCard = ({ title, value, description, icon }) => {
   return (
     <div className="glass-card rounded-lg p-6 hover-scale">
       <div className="flex items-start">

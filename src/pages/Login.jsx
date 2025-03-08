@@ -13,7 +13,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const { login, isAuthenticated } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setIsSubmitting(true);

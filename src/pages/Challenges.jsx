@@ -238,10 +238,10 @@ const difficulties = ["Easy", "Medium", "Hard", "Expert"];
 
 const Challenges = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedDifficulties, setSelectedDifficulties] = useState([]);
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = (category) => {
     if (selectedCategories.includes(category)) {
       setSelectedCategories(selectedCategories.filter((c) => c !== category));
     } else {
@@ -249,7 +249,7 @@ const Challenges = () => {
     }
   };
 
-  const handleDifficultyChange = (difficulty: string) => {
+  const handleDifficultyChange = (difficulty) => {
     if (selectedDifficulties.includes(difficulty)) {
       setSelectedDifficulties(selectedDifficulties.filter((d) => d !== difficulty));
     } else {
@@ -331,7 +331,7 @@ const Challenges = () => {
                       id={challenge.id}
                       title={challenge.title}
                       category={challenge.category}
-                      difficulty={challenge.difficulty as any}
+                      difficulty={challenge.difficulty}
                       solves={challenge.solves}
                       solveRate={challenge.solveRate}
                     />
